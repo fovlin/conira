@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>Message Board</title>
+    <style>
+
+        a {
+            color: #ffaf00;
+        }
+
+        body {
+            color: #efeae0;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background: #181615;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 16px 12px 30px;
+        }
+
+        .board {
+            max-width: 720px;
+            width: 100%;
+            background: #282725;
+            padding: 0px 32px;
+            border-radius: 24px;
+            padding-bottom: 24px;
+        }
+
+        .board-header {
+            margin-bottom: 22px;
+            text-align: center;
+            align-items: baseline;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+
+        h1 {
+            font-weight: 600;
+            color: #fffaf0;
+        }
+
+        .form-group {
+            margin-bottom: 14px;
+        }
+
+        .form-group .label {
+            font-size: 16px;
+            font-weight: 600;
+            color: #fffaf0;
+        }
+
+        input,
+        textarea {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 12px 14px;
+            font-size: 1rem;
+            font-family: inherit;
+            background: #181715;
+            border: 1px solid #3f3e3c;
+            border-radius: 18px;
+            outline: none;
+            height: auto;field-sizing: content;
+            color: #efeae0;
+        }
+
+        textarea {
+            min-height: 192px;
+            max-height: 512px;
+            resize: none;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 14px 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            background: #7f5f00;
+            color: white;
+            border: none;
+            border-radius: 40px;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 8px rgba(20, 40, 60, 0.08);
+            margin-top: 6px;
+        }
+
+        .submit-btn:active {
+            background: #3f2f00;
+            transform: scale(0.98);
+        }
+
+        .message-list-section {
+            margin-top: 8px;
+        }
+
+        h2 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #1a2a3b;
+            letter-spacing: -0.2px;
+        }
+
+        .count {
+            font-size: 0.8rem;
+            background: #dce5ef;
+            padding: 2px 12px;
+            border-radius: 30px;
+            color: #1d3142;
+            font-weight: 500;
+        }
+
+        .message-list {
+            padding-left: 0px;
+            list-style: none;
+            margin-top: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .message-item {
+            background: #181715;
+            border-radius: 22px;
+            padding: 14px 16px 16px;
+        }
+
+        .msg-meta {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 6px 12px;
+            margin-bottom: 8px;
+        }
+
+        .msg-name {
+            font-weight: 700;
+            font-size: 16px;
+            color: #fffaf0;
+            padding: 2px 4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .msg-time {
+            font-size: 0.7rem;
+            color: #cfcac0;
+            padding: 2px 12px;
+            letter-spacing: 0.2px;
+            margin-left: auto;
+            white-space: nowrap;
+        }
+
+        .msg-content {
+            font-size: 0.96rem;
+            line-height: 1.5;
+            color: #efeae0;
+            word-wrap: break-word;
+            padding: 12px 0px;
+            margin-top: 4px;
+        }
+
+        /* 空状态提示 (无留言) */
+        .empty-message {
+            text-align: center;
+            padding: 36px 10px 28px;
+            color: #7b91a7;
+            background: #f4f8fe;
+            border-radius: 40px;
+            font-size: 0.95rem;
+            border: 1px dashed #c8d7e6;
+            margin-top: 8px;
+        }
+        
+        .empty-message span {
+            display: block;
+            font-size: 2.2rem;
+            margin-bottom: 8px;
+            opacity: 0.5;
+        }
+
+        @media (max-width: 420px) {
+            .board {
+                padding: 16px 12px 18px;
+            }
+            .message-form {
+                padding: 14px 12px 14px;
+            }
+            .msg-time {
+                font-size: 0.65rem;
+                padding: 1px 10px;
+            }
+            .submit-btn {
+                font-size: 1rem;
+                padding: 13px 10px;
+            }
+        }
+
+        .lsolation-line {
+            margin: 32px 0px;
+        }
+
+        hr {
+            color: #6f6a60;
+        }
+
+        /* 辅助去除默认button效果 (无js) */
+        button {
+            user-select: none;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="board">
+        <!-- 头部 -->
+        <div class="board-header">
+            <h1>Message Board</h1>
+        </div>
+        <hr>
+
+        <form class="message-form" action="add-note" method="post">
+            <div class="form-group">
+                <p class="label">Your name</p>
+                <input type="text" id="nameInput" name="name" placeholder="Name" value="">
+            </div>
+            <div class="form-group">
+                <p class="label">Message</p>
+                <textarea id="msgInput" name="content" placeholder="Message"></textarea>
+            </div>
+            <button type="submit" class="submit-btn">Commit</button>
+        </form>
+
+        <hr class="lsolation-line">
+
+        <div class="message-list-section">
+            <ul class="message-list">
+                {{ messages }}
+            </ul>
+        </div>
+    </div>
+</body>
+</html>
