@@ -86,7 +86,7 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
         aMessageData := itemData
         aMessageData = bytes.ReplaceAll(aMessageData, []byte("{{ name }}"), []byte(Message.Name))
         aMessageData = bytes.ReplaceAll(aMessageData, []byte("{{ time }}"), []byte(Message.Time))
-        aMessageData = bytes.ReplaceAll(aMessageData, []byte("{{ context }}"), []byte(Message.Content))
+        aMessageData = bytes.ReplaceAll(aMessageData, []byte("{{ content }}"), []byte(Message.Content))
         allMessage = append(allMessage, aMessageData...)
     }
 
