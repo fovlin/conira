@@ -1,4 +1,7 @@
 {
     "Ip": "127.0.0.1",
-    "Port": 80
+    "Port": 80,
+    "TLS": false,
+    "TLS_cry": "",
+    "TLS_key": ""
 }

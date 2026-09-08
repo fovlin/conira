@@ -19,6 +19,9 @@ type Message struct {
 type Config struct {
     Ip string
     Port float64
+    TLS bool
+    TLS_CRT string
+    TLS_KEY string
 }
 
 var (
@@ -145,8 +148,15 @@ func main() {
 
     fmt.Println("listen on: " + config.Ip + ":" + fmt.Sprint(int(config.Port)))
 
-    if err := http.ListenAndServe(config.Ip + ":" + fmt.Sprint(int(config.Port)), nil); err != nil {
-        fmt.Println(err)
-        os.Exit(1)
+    if config.TLS {
+        if err := http.ListenAndServeTLS(config.Ip + ":" + fmt.Sprint(int(config.Port)), config.TLS_CRT, config.TLS_KEY, nil); err != nil {
+            fmt.Println(err)
+            os.Exit(1)
+        }
+    } else {
+        if err := http.ListenAndServe(config.Ip + ":" + fmt.Sprint(int(config.Port)), nil); err != nil {
+            fmt.Println(err)
+            os.Exit(1)
+        }
     }
 }
