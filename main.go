@@ -146,17 +146,19 @@ func main() {
     http.HandleFunc("/", indexHandler)
     http.HandleFunc("/add-note", addHandler)
 
-    fmt.Println("listen on: " + config.Ip + ":" + fmt.Sprint(int(config.Port)))
-
     if config.TLS {
+        fmt.Println("server start on: https://" + config.Ip + ":" + fmt.Sprint(int(config.Port)))
         if err := http.ListenAndServeTLS(config.Ip + ":" + fmt.Sprint(int(config.Port)), config.TLS_CRT, config.TLS_KEY, nil); err != nil {
             fmt.Println(err)
             os.Exit(1)
+        } else {
         }
     } else {
+        fmt.Println("server start on: http://" + config.Ip + ":" + fmt.Sprint(int(config.Port)))
         if err := http.ListenAndServe(config.Ip + ":" + fmt.Sprint(int(config.Port)), nil); err != nil {
             fmt.Println(err)
             os.Exit(1)
+        } else {
         }
     }
 }
