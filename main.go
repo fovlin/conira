@@ -31,7 +31,7 @@ type Config struct {
 
 var (
     loginFile = "login.html"
-    accountsFile = "accounts.json"
+    accountsFile = "users.json"
     indexFile = "index.html"
     itemFile = "item.html"
     messageFile = "messages.json"
@@ -136,6 +136,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
     cookie := &http.Cookie{
         Name: "IsLogin",
         Value: user.UserName,
+        Secure: true,
         Expires: time.Now().Add(time.Hour * 24 * 3),
     }
 
@@ -143,7 +144,6 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
     http.Redirect(w, r, "/", http.StatusSeeOther)
 
 }
-
 
 func mainHandler(w http.ResponseWriter, r *http.Request) {
 
