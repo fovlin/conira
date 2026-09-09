@@ -1,10 +1,6 @@
 {
-    "fovlin": {
-        "UserName": "fovlin",
-        "Password": "conira"
-    },
-    "梦蝶": {
-        "UserName": "梦蝶",
-        "Password": "123456lu"
+    "Guest": {
+        "UserName": "Guest",
+        "Password": "123abc"
     }
 }
