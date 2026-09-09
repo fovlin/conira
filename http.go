@@ -99,7 +99,7 @@ func mainHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(allMessage) == 0 {
-		allMessage = []byte("<p style=\"margin: auto auto\">None any message</p>")
+		allMessage = []byte("<p style=\"margin: auto auto\">None message</p>")
 	}
 
 	userName := []byte(cookie.Value)

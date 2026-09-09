@@ -21,12 +21,14 @@
             width: 100%;
             display: flex;
             justify-content: center;
+            align-items: center;
             font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
             background: #181615;
         }
 
         .board {
             max-width: 720px;
+            width: 100%;
             margin: 12px 0px;
             background: #282725;
             padding: 0px 32px;
@@ -67,7 +69,8 @@
             border: 1px solid #3f3e3c;
             border-radius: 18px;
             outline: none;
-            height: auto;field-sizing: content;
+            height: auto;
+            field-sizing: content;
             color: #efeae0;
         }
 
@@ -105,7 +108,6 @@
             border-radius: 40px;
             letter-spacing: 0.5px;
             box-shadow: 0 4px 8px rgba(20, 40, 60, 0.08);
-            margin-top: 6px;
         }
 
         #logout-btn:active,
@@ -124,37 +126,26 @@
             color: #1a2a3b;
             letter-spacing: -0.2px;
         }
-
-        .count {
-            font-size: 0.8rem;
-            background: #dce5ef;
-            padding: 2px 12px;
-            border-radius: 30px;
-            color: #1d3142;
-            font-weight: 500;
-        }
-
+        
         .message-list {
             padding-left: 0px;
             list-style: none;
             margin-top: 20px;
-            display: flex;
-            flex-direction: column;
             gap: 14px;
         }
 
         .message-item {
             background: #181715;
+            width: 100%;
             box-sizing: border-box;
             border-radius: 22px;
             padding: 14px 20px 20px;
+            margin: 16px 0px;
         }
 
         .msg-meta {
             display: flex;
             align-items: center;
-            flex-wrap: wrap;
-            gap: 6px 12px;
             margin-bottom: 8px;
         }
 
@@ -184,25 +175,6 @@
             word-wrap: break-word;
             padding: 12px 0px;
             margin-top: 4px;
-        }
-
-        /* 空状态提示 (无留言) */
-        .empty-message {
-            text-align: center;
-            padding: 36px 10px 28px;
-            color: #7b91a7;
-            background: #f4f8fe;
-            border-radius: 40px;
-            font-size: 0.95rem;
-            border: 1px dashed #c8d7e6;
-            margin-top: 8px;
-        }
-        
-        .empty-message span {
-            display: block;
-            font-size: 2.2rem;
-            margin-bottom: 8px;
-            opacity: 0.5;
         }
 
         .lsolation-line {
