@@ -10,6 +10,11 @@ import (
 	"time"
 )
 
+type User struct {
+    UserName string
+    Password string
+}
+
 type Message struct {
     Name    string
     Content string
@@ -25,6 +30,7 @@ type Config struct {
 }
 
 var (
+    accountsFile = "accounts.json"
     indexFile = "index.html"
     itemFile = "item.html"
     messageFile = "messages.json"
@@ -50,12 +56,34 @@ func loadMessages() ([]Message, error) {
     return msgs, nil
 }
 
+func loadUser() (map[string]User, error) {
+
+    file, err := os.Open(accountsFile)
+    if os.IsNotExist(err) {
+        return nil, nil
+    }
+    if err != nil {
+        return nil, err
+    }
+
+    defer file.Close()
+
+    var accounts map[string]User
+    err = json.NewDecoder(file).Decode(&accounts)
+    if err != nil {
+        return nil, nil
+    }
+    return accounts, nil
+
+}
+
 func saveMessages(msgs []Message) error {
     file, err := os.Create(messageFile)
     if err != nil {
         return err
     }
     defer file.Close()
+
     encoder := json.NewEncoder(file)
     encoder.SetIndent("", "    ")
     return encoder.Encode(msgs)
@@ -136,6 +164,7 @@ func main() {
         fmt.Println(err)
         os.Exit(1)
     }
+    defer configFile.Close()
 
     err = json.NewDecoder(configFile).Decode(&config)
     if err != nil {
