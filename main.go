@@ -36,8 +36,8 @@ const (
 	itemFile          = "item.html"
 	messageFile       = "messages.json"
 	configFile        = "config.json"
-	maxJsonLength     = 6
-	maxHttpJsonLength = 3
+	maxJsonLength     = 1024
+	maxHttpJsonLength = 32
 )
 
 var (
