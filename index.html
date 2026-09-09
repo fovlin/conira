@@ -19,17 +19,15 @@
         body {
             color: #efeae0;
             width: 100%;
-            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
-            background: #181615;
             display: flex;
             justify-content: center;
-            padding: 16px 12px 30px;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background: #181615;
         }
 
         .board {
             max-width: 720px;
-            margin: auto 0px;
-            width: 100%;
+            margin: 12px 0px;
             background: #282725;
             padding: 0px 32px;
             border-radius: 24px;
@@ -37,10 +35,9 @@
         }
 
         .board-header {
-            margin-bottom: 22px;
-            text-align: center;
-            align-items: baseline;
-            justify-content: space-between;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             flex-wrap: wrap;
         }
 
@@ -54,7 +51,7 @@
         }
 
         .form-group .label {
-            font-size: 16px;
+            font-size: 20px;
             font-weight: 600;
             color: #fffaf0;
         }
@@ -80,7 +77,7 @@
             resize: none;
         }
 
-        .submit-btn {
+        #submit-btn {
             width: 100%;
             padding: 14px 10px;
             font-size: 1.1rem;
@@ -94,7 +91,25 @@
             margin-top: 6px;
         }
 
-        .submit-btn:active {
+        #logout-form {
+            margin-left: auto;
+        }
+
+        #logout-btn {
+            padding: 8px 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            background: #7f5f00;
+            color: white;
+            border: none;
+            border-radius: 40px;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 8px rgba(20, 40, 60, 0.08);
+            margin-top: 6px;
+        }
+
+        #logout-btn:active,
+        #submit-btn:active {
             background: #3f2f00;
             transform: scale(0.98);
         }
@@ -122,7 +137,7 @@
         .message-list {
             padding-left: 0px;
             list-style: none;
-            margin-top: 16px;
+            margin-top: 20px;
             display: flex;
             flex-direction: column;
             gap: 14px;
@@ -132,7 +147,7 @@
             background: #181715;
             box-sizing: border-box;
             border-radius: 22px;
-            padding: 14px 16px 16px;
+            padding: 14px 20px 20px;
         }
 
         .msg-meta {
@@ -145,7 +160,7 @@
 
         .msg-name {
             font-weight: 700;
-            font-size: 16px;
+            font-size: 20px;
             color: #fffaf0;
             padding: 2px 4px;
             display: flex;
@@ -190,23 +205,6 @@
             opacity: 0.5;
         }
 
-        @media (max-width: 420px) {
-            .board {
-                padding: 16px 12px 18px;
-            }
-            .message-form {
-                padding: 14px 12px 14px;
-            }
-            .msg-time {
-                font-size: 0.65rem;
-                padding: 1px 10px;
-            }
-            .submit-btn {
-                font-size: 1rem;
-                padding: 13px 10px;
-            }
-        }
-
         .lsolation-line {
             margin: 32px 0px;
         }
@@ -226,7 +224,7 @@
     <div class="board">
         <!-- 头部 -->
         <div class="board-header">
-            <h1>Message Board</h1>
+            <h1>Message Board</h1><form id="logout-form" action="logout" method="post"><button type="submit" id="logout-btn" formaction="/logout">log out</button></form>
         </div>
         <hr>
 
@@ -235,7 +233,7 @@
                 <p class="label">Message</p>
                 <textarea id="msgInput" name="content" placeholder="Message"></textarea>
             </div>
-            <button type="submit" class="submit-btn">Commit</button>
+            <button type="submit" id="submit-btn">Commit</button>
         </form>
 
         <hr class="lsolation-line">
