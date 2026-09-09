@@ -3,19 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <title>Message Board</title>
+    <title>Log In</title>
     <style>
 
         a {
             color: #ffaf00;
         }
-        
+
         html {
             display: flex;
             justify-content: center;
             min-height: 100%;
         }
-
+        
         body {
             color: #efeae0;
             width: 100%;
@@ -27,6 +27,7 @@
         }
 
         .board {
+            margin: auto 0px;
             max-width: 720px;
             width: 100%;
             background: #282725;
@@ -50,12 +51,6 @@
 
         .form-group {
             margin-bottom: 14px;
-        }
-
-        .form-group .label {
-            font-size: 16px;
-            font-weight: 600;
-            color: #fffaf0;
         }
 
         input,
@@ -98,10 +93,6 @@
             transform: scale(0.98);
         }
 
-        .message-list-section {
-            margin-top: 8px;
-        }
-
         h2 {
             font-size: 1.1rem;
             font-weight: 600;
@@ -129,7 +120,6 @@
 
         .message-item {
             background: #181715;
-            box-sizing: border-box;
             border-radius: 22px;
             padding: 14px 16px 16px;
         }
@@ -193,7 +183,7 @@
             .board {
                 padding: 16px 12px 18px;
             }
-            .message-form {
+            .login-form {
                 padding: 14px 12px 14px;
             }
             .msg-time {
@@ -225,25 +215,21 @@
     <div class="board">
         <!-- 头部 -->
         <div class="board-header">
-            <h1>Message Board</h1>
+            <h1>Log in</h1>
         </div>
         <hr>
 
-        <form class="message-form" action="commit" method="post">
+        <form class="login-form" action="login" method="post">
             <div class="form-group">
-                <p class="label">Message</p>
-                <textarea id="msgInput" name="content" placeholder="Message"></textarea>
+                <p class="label">User Name</p>
+                <input type="text" id="nameInput" name="user-name" placeholder="User Name" value="">
             </div>
-            <button type="submit" class="submit-btn">Commit</button>
+            <div class="form-group">
+                <p class="label">Password</p>
+                <input type="password" id="msgInput" name="password" placeholder="Password"></textarea>
+            </div>
+            <button type="submit" class="submit-btn">Log in</button>
         </form>
-
-        <hr class="lsolation-line">
-
-        <div class="message-list-section">
-            <ul class="message-list">
-                {{ messages }}
-            </ul>
-        </div>
     </div>
 </body>
 </html>
