@@ -1,22 +1,27 @@
 package main
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"net/http"
 	"os"
 	"sync"
+
 	"acovia.net/record"
 )
 
 type User struct {
-	UserName string
-	Password string
+	UserName string `json:"userName"`
+	PasswordHash string `json:"password"`
+	Token string `json:"token"`
+	Expires string `json:"expires"`
 }
 
 type Message struct {
-	Name    string
-	Content string
-	Time    string
+	Name    string `json:"name"`
+	Content string `json:"content"`
+	Time    string `json:"time"`
 }
 
 type Config struct {
@@ -28,42 +33,55 @@ type Config struct {
 }
 
 const (
-	loginFile         = "login.html"
-	accountsFile      = "users.json"
-	indexFile         = "index.html"
-	itemFile          = "item.html"
-	messageFile       = "messages.json"
-	configFile        = "config.json"
-	maxJsonLength     = 1024
-	maxHttpJsonLength = 32
+	resourseDir       string = "resourse"
+	loginFile         string = "html/login.html"
+	usersFile      string = "data/users.json"
+	indexFile         string = "html/index.html"
+	itemFile          string = "html/item.html"
+	messageFile       string = "data/messages.json"
+	configFile        string = "config.json"
+	maxJsonLength     int    = 1024
+	maxHttpJsonLength int    = 32
 )
 
+func toSha256(data string) (string, error) {
+	hash := sha256.New()
+	if _, err := hash.Write([]byte(data)); err != nil {
+		return "", err
+	}
+
+	return hex.EncodeToString(hash.Sum(nil)), nil
+}
+
 var (
-	mutex sync.Mutex
+	mutex   sync.Mutex
+	specURL map[string]func(http.ResponseWriter, *http.Request) = map[string]func(http.ResponseWriter, *http.Request){
+		"/":       mainHandler,
+		"/login":  loginHandler,
+		"/submit": submitHandler,
+		"/logout": logoutHandler,
+	}
 )
 
 func main() {
 
 	config, err := loadConfig()
 	if err != nil {
-		fmt.Println(err)
+		record.Error(err)
 		os.Exit(1)
 	}
 
-	http.HandleFunc("/", mainHandler)
-	http.HandleFunc("/login", loginHandler)
-	http.HandleFunc("/commit", addHandler)
-	http.HandleFunc("/logout", logoutHandler)
+	var handler handler
 
 	if config.TLS {
 		record.Info("https server start on: https://" + config.Ip + ":" + fmt.Sprint(int(config.Port)))
-		if err := http.ListenAndServeTLS(config.Ip+":"+fmt.Sprint(int(config.Port)), config.TLSCRT, config.TLSKEY, nil); err != nil {
+		if err := http.ListenAndServeTLS(config.Ip+":"+fmt.Sprint(int(config.Port)), config.TLSCRT, config.TLSKEY, handler); err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
 	} else {
 		record.Info("http server start on: http://" + config.Ip + ":" + fmt.Sprint(int(config.Port)))
-		if err := http.ListenAndServe(config.Ip+":"+fmt.Sprint(int(config.Port)), nil); err != nil {
+		if err := http.ListenAndServe(config.Ip+":"+fmt.Sprint(int(config.Port)), handler); err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}

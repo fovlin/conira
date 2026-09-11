@@ -1,11 +1,15 @@
 package main
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"os"
+
 )
 
-func loadMessages() ([]Message, error) {
+func loadMessages() (map[string]Message, error) {
+
 	mutex.Lock()
 	defer mutex.Unlock()
 
@@ -18,17 +22,18 @@ func loadMessages() ([]Message, error) {
 	}
 	defer file.Close()
 
-	var msgs []Message
+	var msgs map[string]Message
 	err = json.NewDecoder(file).Decode(&msgs)
 	if err != nil {
 		return nil, nil
 	}
+
 	return msgs, nil
 }
 
-func loadUser() (map[string]User, error) {
+func loadUsers() (map[string]User, error) {
 
-	file, err := os.Open(accountsFile)
+	file, err := os.Open(usersFile)
 	if os.IsNotExist(err) {
 		return nil, err
 	}
@@ -47,19 +52,44 @@ func loadUser() (map[string]User, error) {
 
 }
 
-func saveMessages(msgs []Message, messageFile string) error {
+func saveMessages(msg Message, messageFile string) error {
+
 	mutex.Lock()
 	defer mutex.Unlock()
 
-	file, err := os.Create(messageFile)
+	file, err := os.Open(messageFile)
 	if err != nil {
 		return err
 	}
-	defer file.Close()
+
+	id := make([]byte, 8)
+	if _, err := rand.Reader.Read(id); err != nil {
+		return err
+	}
+
+	var messages map[string]Message
+	err = json.NewDecoder(file).Decode(&messages)
+	if err != nil {
+		return err
+	}
+
+	messages[hex.EncodeToString(id)] = msg
+
+	if err := file.Close(); err != nil {
+		return err
+	}
+
+	file, err = os.Create(messageFile)
+	if err != nil {
+		return err
+	}
 
 	encoder := json.NewEncoder(file)
 	encoder.SetIndent("", "    ")
-	return encoder.Encode(msgs)
+	if err = encoder.Encode(messages); err != nil {
+		return err
+	}
+	return nil
 }
 
 func loadConfig() (Config, error) {

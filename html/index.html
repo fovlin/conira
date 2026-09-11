@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <link href="index.css" rel="stylesheet" />
+    <title>Message Board</title>
+</head>
+<body>
+    <div class="board">
+        <!-- 头部 -->
+        <div class="board-header">
+            <h1>Message Board</h1><form id="logout-form" action="logout" method="post"><button type="submit" id="logout-btn" formaction="/logout">log out</button></form>
+        </div>
+        <hr>
+
+        <form class="message-form" action="submit" method="post">
+            <div class="form-group">
+                <p class="label">Message</p>
+                <textarea id="msgInput" name="content" placeholder="Message"></textarea>
+            </div>
+            <button type="submit" id="submit-btn">Submit</button>
+        </form>
+
+        <hr class="lsolation-line">
+        <div class="message-list">
+            {{ messages }}
+        </div>
+    </div>
+</body>
+</html>
