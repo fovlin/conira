@@ -11,17 +11,30 @@ import (
 	"acovia.net/record"
 )
 
+type MessageBlock struct {
+	ID   []byte
+	Size []byte
+	Data []byte
+}
+
 type User struct {
-	UserName string `json:"userName"`
+	UserName     string `json:"userName"`
 	PasswordHash string `json:"password"`
-	Token string `json:"token"`
-	Expires string `json:"expires"`
+	Token        string `json:"token"`
+	Expires      string `json:"expires"`
 }
 
 type Message struct {
 	Name    string `json:"name"`
 	Content string `json:"content"`
 	Time    string `json:"time"`
+}
+
+type MessageWithID struct {
+	ID      string
+	Name    string
+	Content string
+	Time    string
 }
 
 type Config struct {
@@ -33,15 +46,20 @@ type Config struct {
 }
 
 const (
+	adminLoginFile         string = "html/login.html"
+	adminUsersFile         string = "data/users.json"
+	adminIndexFile         string = "html/index.html"
+	adminItemFile          string = "html/item.html"
+)
+
+const (
 	resourseDir       string = "resourse"
 	loginFile         string = "html/login.html"
-	usersFile      string = "data/users.json"
+	usersFile         string = "data/users.json"
 	indexFile         string = "html/index.html"
 	itemFile          string = "html/item.html"
-	messageFile       string = "data/messages.json"
+	messageFile       string = "data/messages.data"
 	configFile        string = "config.json"
-	maxJsonLength     int    = 1024
-	maxHttpJsonLength int    = 32
 )
 
 func toSha256(data string) (string, error) {
@@ -56,7 +74,7 @@ func toSha256(data string) (string, error) {
 var (
 	mutex   sync.Mutex
 	specURL map[string]func(http.ResponseWriter, *http.Request) = map[string]func(http.ResponseWriter, *http.Request){
-		"/":       mainHandler,
+		"/":       indexHandler,
 		"/login":  loginHandler,
 		"/submit": submitHandler,
 		"/logout": logoutHandler,

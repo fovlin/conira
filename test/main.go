@@ -1,17 +1,13 @@
 package main
 
 import (
-	"encoding/json"
+	"encoding/binary"
 	"fmt"
-	"os"
 )
 
 func main() {
-	var obj map[string]map[string]map[string]string
-	f,_ := os.Open("../data/messages.json")
-	err := json.NewDecoder(f).Decode(&obj)
-	if err != nil {
-		fmt.Println(err)
-	}
-	fmt.Println(obj["str"]["var"])
+	b := make([]byte, 4)
+	var v uint32 = 32
+	binary.LittleEndian.PutUint32(b,v)
+	fmt.Println(b)
 }

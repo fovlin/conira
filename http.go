@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"crypto/rand"
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"io"
+	"mime"
 	"net/http"
 	"os"
 	"path"
@@ -66,9 +66,10 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := getUserData(httpUserName)
+	user, err := loadUserData(httpUserName)
 	if err != nil {
-		record.Error("(load user data)", err)
+		record.Warn("(load user data)", err)
+		http.Redirect(w, r, "/", http.StatusSeeOther)
 		return
 	}
 
@@ -84,15 +85,17 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if time.Now().After(expiresTime) {
+	if !time.Now().Before(expiresTime) || len(token) != 16 {
 
-		expiresTime = time.Now().Add(time.Hour * 24 * 3)
-		rand.Reader.Read(token)
+		user.Expires = time.Now().Add(time.Hour * 24 * 3).Format(time.DateTime)
+		_, err := rand.Reader.Read(token)
+		if err != nil {
+			record.Error("create user token:", err)
+		}
 
 	}
 
 	httpPasswdHash, err := toSha256(httpPassword)
-	record.Debug(httpPasswdHash)
 
 	if user.PasswordHash != httpPasswdHash {
 		record.Warn("password verification failed:", "user:", httpUserName)
@@ -118,13 +121,15 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, nameCookie)
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 
+	user.Token = hex.EncodeToString(token)
+
 	if err = saveUserData(user); err != nil {
-		record.Error("save user data", err)
+		record.Error("save user data:", err)
 	}
 
 }
 
-func mainHandler(w http.ResponseWriter, r *http.Request) {
+func indexHandler(w http.ResponseWriter, r *http.Request) {
 
 	if !checkCookie(w, r) {
 		login(w)
@@ -142,39 +147,8 @@ func mainHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	messageList, err := loadMessages()
-
-	// if len(messageList) > maxHttpJsonLength {
-	// 	messageList = messageList[:maxHttpJsonLength]
-	// }
-
-
-	var sortedMessages []map[string]Message
-
-	for id, message := range messageList {
-		for n, sortedMessageObj := range sortedMessages {
-			sortedMessage := sortedMessageObj[id]
-			if len(sortedMessage.Time) == 0 {
-				sortedMessages[n] = sortedMessageObj
-				break
-			}
-
-			unsortTime, err := time.Parse(time.DateTime, message.Time)
-			if err != nil {
-				record.Error("parse time:", err)
-			}
-
-			sortedTime, err := time.Parse(time.DateTime, sortedMessage.Time)
-			if err != nil {
-				record.Error("parse time:", err)
-			}
-
-			if unsortTime.Before(sortedTime) {
-				prefixList := sortedMessages[:n]
-				suffixList := sortedMessages[n:]
-				sortedMessages = append(prefixList, sortedMessageObj)
-				sortedMessages = append(sortedMessages, suffixList...)
-			}
-		}
+	if err != nil {
+		record.Error("load message list: ", err)
 	}
 
 	allMessage := []byte{}
@@ -183,7 +157,7 @@ func mainHandler(w http.ResponseWriter, r *http.Request) {
 		aMessageData = bytes.ReplaceAll(aMessageData, []byte("{{ name }}"), []byte(message.Name))
 		aMessageData = bytes.ReplaceAll(aMessageData, []byte("{{ time }}"), []byte(message.Time))
 		aMessageData = bytes.ReplaceAll(aMessageData, []byte("{{ content }}"), []byte(message.Content))
-		allMessage = append(allMessage, aMessageData...)
+		allMessage = append(aMessageData, allMessage...)
 	}
 
 	if len(allMessage) == 0 {
@@ -209,7 +183,6 @@ func submitHandler(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 	}
 
-
 	if r.Method != http.MethodPost {
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 		return
@@ -230,22 +203,18 @@ func submitHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	msg := Message{
+	message := Message{
 		Name:    userName,
 		Content: content,
 		Time:    time.Now().Format(time.DateTime),
 	}
 
-	// if len(msgs) > maxJsonLength {
-	// 	msgs = msgs[:maxJsonLength]
-	// }
-
-	err = saveMessages(msg, messageFile)
+	err = saveMessages(message, messageFile)
 	if err != nil {
-		record.Error("save message:",err)
+		record.Error("save message:", err)
 	}
 
-	record.Info("new message:", "user:", msg.Name, "address:", r.RemoteAddr)
+	record.Info("new message:", "user:", message.Name, "address:", r.RemoteAddr)
 
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 
@@ -275,13 +244,6 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
-func setMime(filePath string, w http.ResponseWriter) {
-	switch path.Ext(filePath) {
-	case ".css":
-		w.Header().Set("Content-Type", "text/css")
-	}
-}
-
 func checkCookie(w http.ResponseWriter, r *http.Request) bool {
 
 	nameCookie, err := r.Cookie("UserName")
@@ -296,9 +258,9 @@ func checkCookie(w http.ResponseWriter, r *http.Request) bool {
 		return false
 	}
 
-	user, err := getUserData(nameCookie.Value)
+	user, err := loadUserData(nameCookie.Value)
 	if err != nil {
-		record.Error("get user data", err)
+		record.Error("load user data:", err)
 		return false
 	}
 
@@ -310,25 +272,11 @@ func checkCookie(w http.ResponseWriter, r *http.Request) bool {
 
 }
 
-func saveUserData(user User) error {
+func loadUserData(userName string) (User, error) {
 
-	mutex.Lock()
-	defer mutex.Unlock()
-
-	file, err := os.Open(usersFile)
+	userList, err := loadUserList()
 	if err != nil {
-		return err
-	}
-	json.NewEncoder(file).Encode(user)
-	return nil
-
-}
-
-func getUserData(userName string) (User, error) {
-
-	userList, err := loadUsers()
-	if err != nil {
-		record.Error("(load user list)", err)
+		return User{}, err
 	}
 
 	user, ok := userList[userName]
@@ -338,4 +286,11 @@ func getUserData(userName string) (User, error) {
 
 	return user, nil
 
+}
+
+func setMime(fileName string, w http.ResponseWriter) {
+	ext := path.Ext(fileName)
+	if mimeType := mime.TypeByExtension(ext); len(mimeType) != 0 {
+		w.Header().Set("Content-Type", mimeType)
+	}
 }
