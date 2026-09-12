@@ -33,7 +33,9 @@ func (handler handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	filePath, _ := strings.CutPrefix(r.RequestURI, "/")
 	file, err := resourseRoot.Open(filePath)
-	if err != nil {
+	if os.IsNotExist(err) {
+		http.Redirect(w, r, "/status/404.html", http.StatusSeeOther)
+	} else if err != nil {
 		record.Warn("(open resourse file)", err)
 	}
 	defer file.Close()
@@ -78,8 +80,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		record.Warn("(parse user expires time)", err)
 	}
 
-	token := make([]byte, 16)
-	token, err = hex.DecodeString(user.Token)
+	token, err := hex.DecodeString(user.Token)
 	if err != nil {
 		record.Error("(load user list)", err)
 		return
@@ -87,6 +88,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 
 	if !time.Now().Before(expiresTime) || len(token) != 16 {
 
+		token = make([]byte, 16)
 		user.Expires = time.Now().Add(time.Hour * 24 * 3).Format(time.DateTime)
 		_, err := rand.Reader.Read(token)
 		if err != nil {
@@ -230,7 +232,7 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 		record.Error("(parse cookie)", err)
 	}
-	tokenCookie, err := r.Cookie("UserName")
+	tokenCookie, err := r.Cookie("Token")
 	if err != nil {
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 		record.Error("(parse cookie)", err)
@@ -248,13 +250,11 @@ func checkCookie(w http.ResponseWriter, r *http.Request) bool {
 
 	nameCookie, err := r.Cookie("UserName")
 	if err != nil {
-		record.Warn("(check cookie)", err)
 		return false
 	}
 
 	tokenCookie, err := r.Cookie("Token")
 	if err != nil {
-		record.Warn("(check cookie)", err)
 		return false
 	}
 

@@ -46,10 +46,10 @@ type Config struct {
 }
 
 const (
-	adminLoginFile         string = "html/login.html"
-	adminUsersFile         string = "data/users.json"
-	adminIndexFile         string = "html/index.html"
-	adminItemFile          string = "html/item.html"
+	adminLoginFile         string = "html/admin/login.html"
+	adminUsersFile         string = "data/admin.json"
+	adminIndexFile         string = "html/admin/index.html"
+	adminItemFile          string = "html/admin/item.html"
 )
 
 const (

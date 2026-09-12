@@ -131,13 +131,13 @@ h2 {
     margin: 16px 0px;
 }
 
-.msg-meta {
+.message-meta {
     display: flex;
     align-items: center;
     margin-bottom: 8px;
 }
 
-.msg-name {
+.message-name {
     font-weight: 700;
     font-size: 20px;
     color: #fffaf0;
@@ -147,7 +147,7 @@ h2 {
     gap: 6px;
 }
 
-.msg-time {
+.message-time {
     font-size: 0.8rem;
     color: #cfcac0;
     padding: 2px 12px;
@@ -156,7 +156,7 @@ h2 {
     white-space: nowrap;
 }
 
-.msg-content {
+.message-content {
     font-size: 0.96rem;
     line-height: 1.5;
     color: #efeae0;
