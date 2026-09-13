@@ -27,7 +27,7 @@ func (handler handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	resourseRoot, err := os.OpenRoot(resourseDir)
 	if err != nil {
-		record.Error("(open resourse directory)", err)
+		record.Warn("(open resourse directory)", err)
 	}
 	defer resourseRoot.Close()
 
@@ -48,7 +48,7 @@ func (handler handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func login(w http.ResponseWriter) {
 	loginFile, err := os.ReadFile(loginFile)
 	if err != nil {
-		record.Error("(read login file)", err)
+		record.Warn("(read login file)", err)
 		os.Exit(1)
 	}
 	w.Write(loginFile)
@@ -70,34 +70,17 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 
 	user, err := loadUserData(httpUserName)
 	if err != nil {
-		record.Warn("(load user data)", err)
+		record.Warn("load user data:", err)
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 		return
 	}
 
-	expiresTime, err := time.Parse(time.DateTime, user.Expires)
+	httpPasswdHash, err := toSha256(httpPassword)
 	if err != nil {
-		record.Warn("(parse user expires time)", err)
-	}
-
-	token, err := hex.DecodeString(user.Token)
-	if err != nil {
-		record.Error("(load user list)", err)
+		record.Warn("to sha256:", err)
+		http.Redirect(w, r, "/", http.StatusSeeOther)
 		return
 	}
-
-	if !time.Now().Before(expiresTime) || len(token) != 16 {
-
-		token = make([]byte, 16)
-		user.Expires = time.Now().Add(time.Hour * 24 * 3).Format(time.DateTime)
-		_, err := rand.Reader.Read(token)
-		if err != nil {
-			record.Error("create user token:", err)
-		}
-
-	}
-
-	httpPasswdHash, err := toSha256(httpPassword)
 
 	if user.PasswordHash != httpPasswdHash {
 		record.Warn("password verification failed:", "user:", httpUserName)
@@ -105,52 +88,31 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	nameCookie := &http.Cookie{
-		Name:    "UserName",
-		Value:   user.UserName,
-		Secure:  true,
-		Expires: time.Now().Add(time.Hour * 24 * 3),
-	}
+	setUserData(user.UserName, w)
 
-	tokenCookie := &http.Cookie{
-		Name:    "Token",
-		Value:   hex.EncodeToString(token),
-		Secure:  true,
-		Expires: time.Now().Add(time.Hour * 24 * 3),
-	}
-
-	http.SetCookie(w, tokenCookie)
-	http.SetCookie(w, nameCookie)
 	http.Redirect(w, r, "/", http.StatusSeeOther)
-
-	user.Token = hex.EncodeToString(token)
-
-	if err = saveUserData(user); err != nil {
-		record.Error("save user data:", err)
-	}
-
 }
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
 
-	if !checkCookie(w, r) {
+	if !validCookie(r) {
 		login(w)
 		return
 	}
 
 	indexData, err := os.ReadFile(indexFile)
 	if err != nil {
-		record.Error("read index file", err)
+		record.Warn("read index file", err)
 	}
 
 	itemData, err := os.ReadFile(itemFile)
 	if err != nil {
-		record.Error("read item file", err)
+		record.Warn("read item file", err)
 	}
 
 	messageList, err := loadMessages()
 	if err != nil {
-		record.Error("load message list: ", err)
+		record.Warn("load message list: ", err)
 	}
 
 	allMessage := []byte{}
@@ -181,8 +143,9 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 
 func submitHandler(w http.ResponseWriter, r *http.Request) {
 
-	if !checkCookie(w, r) {
+	if !validCookie(r) {
 		http.Redirect(w, r, "/", http.StatusSeeOther)
+		return
 	}
 
 	if r.Method != http.MethodPost {
@@ -213,7 +176,7 @@ func submitHandler(w http.ResponseWriter, r *http.Request) {
 
 	err = saveMessages(message, messageFile)
 	if err != nil {
-		record.Error("save message:", err)
+		record.Warn("save message:", err)
 	}
 
 	record.Info("new message:", "user:", message.Name, "address:", r.RemoteAddr)
@@ -230,12 +193,12 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) {
 	nameCookie, err := r.Cookie("UserName")
 	if err != nil {
 		http.Redirect(w, r, "/", http.StatusSeeOther)
-		record.Error("(parse cookie)", err)
+		record.Warn("(parse cookie)", err)
 	}
 	tokenCookie, err := r.Cookie("Token")
 	if err != nil {
 		http.Redirect(w, r, "/", http.StatusSeeOther)
-		record.Error("(parse cookie)", err)
+		record.Warn("(parse cookie)", err)
 	}
 
 	nameCookie.MaxAge = -1
@@ -246,7 +209,7 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
-func checkCookie(w http.ResponseWriter, r *http.Request) bool {
+func validCookie(r *http.Request) bool {
 
 	nameCookie, err := r.Cookie("UserName")
 	if err != nil {
@@ -260,14 +223,19 @@ func checkCookie(w http.ResponseWriter, r *http.Request) bool {
 
 	user, err := loadUserData(nameCookie.Value)
 	if err != nil {
-		record.Error("load user data:", err)
+		record.Warn("load user data:", err)
 		return false
 	}
 
-	if user.Token != tokenCookie.Value {
+	expiresTime, err := time.Parse(time.DateTime, user.Expires)
+	if err != nil {
+		record.Warn("parse expires time:", err)
 		return false
 	}
 
+	if user.Token != tokenCookie.Value || !time.Now().Before(expiresTime) {
+		return false
+	}
 	return true
 
 }
@@ -293,4 +261,50 @@ func setMime(fileName string, w http.ResponseWriter) {
 	if mimeType := mime.TypeByExtension(ext); len(mimeType) != 0 {
 		w.Header().Set("Content-Type", mimeType)
 	}
+}
+
+func setUserData(userName string,w http.ResponseWriter) error {
+
+	user, err := loadUserData(userName)
+	if err != nil {
+		return err
+	}
+
+	token := make([]byte, 16)
+	token, err = hex.DecodeString(user.Token)
+	if err != nil {
+		return err
+	}
+
+	user.Expires = time.Now().Add(time.Hour * 24 * 3).Format(time.DateTime)
+	_, err = rand.Reader.Read(token)
+	if err != nil {
+		return err
+	}
+
+	user.Token = hex.EncodeToString(token)
+
+	nameCookie := &http.Cookie{
+		Name:    "UserName",
+		Value:   user.UserName,
+		Secure:  true,
+		Expires: time.Now().Add(time.Hour * 24 * 3),
+	}
+
+	tokenCookie := &http.Cookie{
+		Name:    "Token",
+		Value:   user.Token,
+		Secure:  true,
+		Expires: time.Now().Add(time.Hour * 24 * 3),
+	}
+
+	http.SetCookie(w, tokenCookie)
+	http.SetCookie(w, nameCookie)
+
+	if err := saveUserData(user); err != nil {
+		record.Warn("save user data:",err)
+	}
+
+	return nil
+
 }

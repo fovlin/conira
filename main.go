@@ -46,13 +46,6 @@ type Config struct {
 }
 
 const (
-	adminLoginFile         string = "html/admin/login.html"
-	adminUsersFile         string = "data/admin.json"
-	adminIndexFile         string = "html/admin/index.html"
-	adminItemFile          string = "html/admin/item.html"
-)
-
-const (
 	resourseDir       string = "resourse"
 	loginFile         string = "html/login.html"
 	usersFile         string = "data/users.json"

@@ -185,23 +185,3 @@ func loadConfig() (Config, error) {
 	return config, nil
 
 }
-
-func loadAdminList() (map[string]User, error) {
-
-	file, err := os.Open(adminUsersFile)
-	if os.IsNotExist(err) {
-		return nil, err
-	}
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-
-	var accounts map[string]User
-	err = json.NewDecoder(file).Decode(&accounts)
-	if err != nil {
-		return nil, err
-	}
-	return accounts, nil
-
-}
