@@ -19,7 +19,7 @@ func loadMessages() ([]MessageWithID, error) {
 	var (
 		block       MessageBlock
 		messageList []MessageWithID
-		message MessageWithID
+		message     MessageWithID
 	)
 
 	block.ID = make([]byte, 8)
@@ -100,7 +100,7 @@ func saveUserData(user User) error {
 	}
 
 	var userMap map[string]User
-	
+
 	err = json.Unmarshal(fileData, &userMap)
 	if err != nil {
 		return err
@@ -171,6 +171,15 @@ func loadConfig() (Config, error) {
 
 	var config Config
 
+	_, err := os.Stat(configFile)
+	if os.IsNotExist(err) {
+		if err := createConfig(); err != nil {
+			return Config{}, err
+		}
+	} else if !os.IsNotExist(err) && err != nil {
+		return Config{}, err
+	}
+
 	configFile, err := os.Open(configFile)
 	if err != nil {
 		return Config{}, err
@@ -184,4 +193,29 @@ func loadConfig() (Config, error) {
 
 	return config, nil
 
+}
+
+func createConfig() error {
+
+	var config Config
+	config.Ip = "127.0.0.1"
+	config.Port = 80
+	config.TLS.Enable = false
+	config.TLS.CRT = ""
+	config.TLS.KEY = ""
+
+	file, err := os.Create("config.json")
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	encoder := json.NewEncoder(file)
+	encoder.SetIndent("", "  ")
+	err = encoder.Encode(config)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

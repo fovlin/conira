@@ -38,21 +38,27 @@ type MessageWithID struct {
 }
 
 type Config struct {
-	Ip     string  `json:"ip"`
-	Port   float64 `json:"port"`
-	TLS    bool    `json:"tls"`
-	TLSCRT string  `json:"tlsCrt"`
-	TLSKEY string  `json:"tlsKey"`
+	Verify bool      `json:"verify"`
+	Ip     string    `json:"ip"`
+	Port   float64   `json:"port"`
+	TLS    TLSConfig `json:"tls"`
+}
+
+type TLSConfig struct {
+	Enable bool   `json:"enable"`
+	CRT    string `json:"crt"`
+	KEY    string `json:"Key"`
 }
 
 const (
-	resourseDir       string = "resourse"
-	loginFile         string = "html/login.html"
-	usersFile         string = "data/users.json"
-	indexFile         string = "html/index.html"
-	itemFile          string = "html/item.html"
-	messageFile       string = "data/messages.data"
-	configFile        string = "config.json"
+	resourseDir string = "resourse"
+	loginFile   string = "html/login.html"
+	loginNoVerifyFile   string = "html/login-no-verify.html"
+	usersFile   string = "data/users.json"
+	indexFile   string = "html/index.html"
+	itemFile    string = "html/item.html"
+	messageFile string = "data/messages.data"
+	configFile  string = "config.json"
 )
 
 func toSha256(data string) (string, error) {
@@ -65,6 +71,7 @@ func toSha256(data string) (string, error) {
 }
 
 var (
+	config Config
 	mutex   sync.Mutex
 	specURL map[string]func(http.ResponseWriter, *http.Request) = map[string]func(http.ResponseWriter, *http.Request){
 		"/":       indexHandler,
@@ -78,22 +85,22 @@ func main() {
 
 	config, err := loadConfig()
 	if err != nil {
-		record.Error(err)
+		record.Error("...",err)
 		os.Exit(1)
 	}
 
 	var handler handler
 
-	if config.TLS {
+	if config.TLS.Enable {
 		record.Info("https server start on: https://" + config.Ip + ":" + fmt.Sprint(int(config.Port)))
-		if err := http.ListenAndServeTLS(config.Ip+":"+fmt.Sprint(int(config.Port)), config.TLSCRT, config.TLSKEY, handler); err != nil {
-			fmt.Println(err)
+		if err := http.ListenAndServeTLS(config.Ip+":"+fmt.Sprint(int(config.Port)), config.TLS.CRT, config.TLS.KEY, handler); err != nil {
+			record.Error(err)
 			os.Exit(1)
 		}
 	} else {
 		record.Info("http server start on: http://" + config.Ip + ":" + fmt.Sprint(int(config.Port)))
 		if err := http.ListenAndServe(config.Ip+":"+fmt.Sprint(int(config.Port)), handler); err != nil {
-			fmt.Println(err)
+			record.Error(err)
 			os.Exit(1)
 		}
 	}

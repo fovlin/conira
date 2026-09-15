@@ -1,7 +1,10 @@
 {
-    "ip": "127.0.0.1",
-    "port": 80,
-    "tls": false,
-    "tlsCrt": "",
-    "tlsKey": ""
+  "verify": false,
+  "ip": "127.0.0.1",
+  "port": 80,
+  "tls": {
+    "enable": false,
+    "crt": "",
+    "Key": ""
+  }
 }

@@ -46,12 +46,21 @@ func (handler handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func login(w http.ResponseWriter) {
-	loginFile, err := os.ReadFile(loginFile)
-	if err != nil {
-		record.Warn("(read login file)", err)
-		os.Exit(1)
+	var file []byte
+	var err error
+	if config.Verify {
+		file, err = os.ReadFile(loginFile)
+		if err != nil {
+			record.Error("(read login file)", err)
+		}
+	} else {
+		file, err = os.ReadFile(loginNoVerifyFile)
+		if err != nil {
+			record.Error("(read login file)", err)
+		}
 	}
-	w.Write(loginFile)
+
+	w.Write(file)
 }
 
 func loginHandler(w http.ResponseWriter, r *http.Request) {
@@ -62,6 +71,11 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	httpUserName := r.FormValue("user-name")
+
+	if !config.Verify {
+		setUserData(httpUserName, w)
+	}
+
 	httpPassword := r.FormValue("password")
 	if httpUserName == "" || httpPassword == "" {
 		http.Redirect(w, r, "/", http.StatusSeeOther)
@@ -216,6 +230,10 @@ func validCookie(r *http.Request) bool {
 		return false
 	}
 
+	if !config.Verify {
+		return true
+	}
+
 	tokenCookie, err := r.Cookie("Token")
 	if err != nil {
 		return false
@@ -263,7 +281,7 @@ func setMime(fileName string, w http.ResponseWriter) {
 	}
 }
 
-func setUserData(userName string,w http.ResponseWriter) error {
+func setUserData(userName string, w http.ResponseWriter) error {
 
 	user, err := loadUserData(userName)
 	if err != nil {
@@ -301,8 +319,10 @@ func setUserData(userName string,w http.ResponseWriter) error {
 	http.SetCookie(w, tokenCookie)
 	http.SetCookie(w, nameCookie)
 
-	if err := saveUserData(user); err != nil {
-		record.Warn("save user data:",err)
+	if config.Verify {
+		if err := saveUserData(user); err != nil {
+			record.Warn("save user data:", err)
+		}
 	}
 
 	return nil
